@@ -1,20 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Bases</title>
+    <title>Juego de Mutaciones</title>
 </head>
 <body>
-    <h1>Entrar a una Base</h1>
 
-    <input id="baseName" placeholder="Nombre de la Base">
-    <button onclick="goToBase()">Entrar</button>
+<h1>Bienvenido a tu juego</h1>
+<h3>Entrar a una Base</h3>
 
-    <script>
-        function goToBase() {
-            const base = document.getElementById("baseName").value.trim();
-            if (!base) return alert("Escribe una base");
-            window.location = `/base/${base}`;
-        }
-    </script>
+<input id="baseName" placeholder="Nombre de la Base">
+<button onclick="goToBase()">Entrar</button>
+
+<script>
+function goToBase() {
+    let base = document.getElementById("baseName").value;
+    if (base.trim() === "") {
+        alert("Escribe un nombre de base");
+        return;
+    }
+    window.location.href = `/base/${base}`;
+}
+</script>
+
 </body>
 </html>
