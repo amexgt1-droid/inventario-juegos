@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bases</title>
+</head>
+<body>
+    <h1>Entrar a una Base</h1>
+
+    <input id="baseName" placeholder="Nombre de la Base">
+    <button onclick="goToBase()">Entrar</button>
+
+    <script>
+        function goToBase() {
+            const base = document.getElementById("baseName").value.trim();
+            if (!base) return alert("Escribe una base");
+            window.location = `/base/${base}`;
+        }
+    </script>
+</body>
+</html>
