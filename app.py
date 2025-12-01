@@ -1,19 +1,23 @@
 from flask import Flask, render_template, request, jsonify
 from pymongo import MongoClient
+import ssl
+import os
 
 app = Flask(__name__)
 
 # -------------------------
-# Conexión a MongoDB Atlas
+# Conexión a MongoDB Atlas con TLS seguro
 # -------------------------
-# Ajusta la contraseña si tiene caracteres especiales (%40 para @)
+# Reemplaza tu contraseña si tiene caracteres especiales
 MONGO_URI = "mongodb+srv://amexgt1:23092025%40a@cluster0.akpblh1.mongodb.net/game_db?retryWrites=true&w=majority"
-client = MongoClient(MONGO_URI)
 
-# Nombre de la base de datos
+client = MongoClient(
+    MONGO_URI,
+    tls=True,                  # habilita TLS
+    tlsAllowInvalidCertificates=False  # verifica certificados
+)
+
 db = client["game_db"]
-
-# Colección donde guardaremos los personajes
 characters = db["characters"]
 
 # -------------------------
@@ -28,7 +32,6 @@ def index():
 def base_page(base):
     return render_template("base.html", base=base)
 
-# API para buscar personaje
 @app.route("/api/search")
 def search_character():
     base = request.args.get("base")
@@ -38,7 +41,6 @@ def search_character():
         return jsonify({"exists": True, "data": {"name": char["name"], "rarity": char["rarity"], "account": char["account"]}})
     return jsonify({"exists": False})
 
-# API para agregar personaje
 @app.route("/api/add", methods=["POST"])
 def add_character():
     data = request.get_json()
@@ -50,14 +52,12 @@ def add_character():
     })
     return jsonify({"status": "ok"})
 
-# API para listar personajes de una base
 @app.route("/api/list/<base>")
 def list_characters(base):
     chars = list(characters.find({"base": base}))
     result = [{"name": c["name"], "rarity": c["rarity"], "account": c["account"]} for c in chars]
     return jsonify(result)
 
-# API para borrar personaje
 @app.route("/api/delete", methods=["DELETE"])
 def delete_character():
     data = request.get_json()
@@ -68,4 +68,4 @@ def delete_character():
 # Ejecutar la app
 # -------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)
