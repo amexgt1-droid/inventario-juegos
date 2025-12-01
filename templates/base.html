@@ -16,82 +16,11 @@
 <h3>Personajes guardados</h3>
 <div id="list"></div>
 
+<!-- JavaScript externo -->
+<script src="/static/script.js"></script>
+
 <script>
-const base = "{{ base }}";
-
-async function searchCharacter() {
-    const name = document.getElementById("searchName").value.trim();
-
-    const res = await fetch(`/api/search?base=${base}&name=${name}`);
-    const data = await res.json();
-
-    const box = document.getElementById("searchResult");
-
-    if (!data.exists) {
-        box.innerHTML = `
-            <p>No existe "${name}". ¿Agregar?</p>
-            <input id="newName" value="${name}">
-            <input id="newRarity" placeholder="Rareza">
-            <input id="newAccount" placeholder="Cuenta">
-            <button onclick="addCharacter()">Agregar</button>
-        `;
-    } else {
-        const c = data.data;
-        box.innerHTML = `
-            <h3>Encontrado:</h3>
-            <p>Nombre: ${c.name}</p>
-            <p>Rareza: ${c.rarity}</p>
-            <p>Cuenta: ${c.account}</p>
-            <button onclick="deleteCharacter('${c.name}')">Borrar</button>
-        `;
-    }
-}
-
-async function addCharacter() {
-    const name = document.getElementById("newName").value;
-    const rarity = document.getElementById("newRarity").value;
-    const account = document.getElementById("newAccount").value;
-
-    await fetch("/api/add", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ base, name, rarity, account })
-    });
-
-    alert("Guardado!");
-    loadList();
-}
-
-async function loadList() {
-    const res = await fetch(`/api/list/${base}`);
-    const chars = await res.json();
-    let html = "";
-
-    chars.forEach(c => {
-        html += `
-            <p>
-                Nombre: ${c.name} | ${c.rarity} | ${c.account}
-                <button onclick="deleteCharacter('${c.name}')">Borrar</button>
-            </p>
-        `;
-    });
-
-    document.getElementById("list").innerHTML = html;
-}
-
-async function deleteCharacter(name) {
-    if (!confirm(`¿Borrar "${name}"?`)) return;
-
-    await fetch("/api/delete", {
-        method: "DELETE",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ base, name })
-    });
-
-    loadList();
-}
-
-loadList();
+const base = "{{ base }}";  // Pasamos el nombre de la base a script.js
 </script>
 
 </body>
