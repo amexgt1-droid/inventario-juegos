@@ -1,113 +1,67 @@
-// Obtenemos la base desde la URL
-const base = new URL(window.location.href).pathname.split("/base/")[1];
-
-// ---------------------------------
-// Buscar personaje
-// ---------------------------------
-async function searchCharacter() {
-    const name = document.getElementById("searchName").value.trim();
-
-    if (!name) return alert("Escribe un nombre");
-
-    const res = await fetch(`/api/search?base=${base}&name=${name}`);
+// Función para actualizar la lista de personajes
+async function updateList() {
+    const res = await fetch(`/api/list/${base}`);
     const data = await res.json();
-
-    const box = document.getElementById("searchResult");
-
-    if (!data.exists) {
-        box.innerHTML = `
-            <p>No existe "${name}". ¿Agregar?</p>
-            
-            <label>Nombre:</label><br>
-            <input id="newName" value="${name}">
-            <br><br>
-
-            <label>Rareza:</label><br>
-            <input id="newRarity" placeholder="Ej: Común, Raro, Oro...">
-            <br><br>
-
-            <label>Cuenta:</label><br>
-            <input id="newAccount" placeholder="Ej: Cuenta1, Guardado2...">
-            <br><br>
-
-            <button onclick="addCharacter()">Agregar</button>
-        `;
-    } else {
-        const c = data.data;
-        box.innerHTML = `
-            <h3>Encontrado:</h3>
-            <p><strong>Nombre:</strong> ${c.name}</p>
-            <p><strong>Rareza:</strong> ${c.rarity}</p>
-            <p><strong>Cuenta:</strong> ${c.account}</p>
-
-            <button onclick="deleteCharacter('${c.name}')">Borrar</button>
-        `;
-    }
+    const listDiv = document.getElementById("list");
+    listDiv.innerHTML = "";
+    data.forEach(c => {
+        const div = document.createElement("div");
+        div.innerHTML = `Nombre: ${c.name}, Rareza: ${c.rarity}, Cuenta: ${c.account} 
+        <button onclick="deleteCharacter('${c.name}')">Borrar</button>`;
+        listDiv.appendChild(div);
+    });
 }
 
-// ---------------------------------
-// Agregar personaje
-// ---------------------------------
-async function addCharacter() {
-    const name = document.getElementById("newName").value.trim();
-    const rarity = document.getElementById("newRarity").value.trim();
-    const account = document.getElementById("newAccount").value.trim();
-
-    if (!name || !rarity || !account) {
-        alert("Llena todos los campos.");
+// Buscar personaje
+async function searchCharacter() {
+    const name = document.getElementById("searchName").value;
+    if (!name) {
+        alert("Escribe un nombre");
         return;
     }
+    const res = await fetch(`/api/search?base=${base}&name=${name}`);
+    const data = await res.json();
+    const searchDiv = document.getElementById("searchResult");
+    searchDiv.innerHTML = "";
+    if (data.exists) {
+        searchDiv.innerHTML = `Ya existe: Nombre: ${data.data.name}, Rareza: ${data.data.rarity}, Cuenta: ${data.data.account}`;
+    } else {
+        searchDiv.innerHTML = `
+            No existe. Agregar:
+            <br>
+            Rareza: <input id="rarity" placeholder="Ej: comun">
+            Cuenta: <input id="account" placeholder="Ej: Guardado1">
+            <button onclick="addCharacter('${name}')">Agregar</button>
+        `;
+    }
+}
 
+// Agregar personaje
+async function addCharacter(name) {
+    const rarity = document.getElementById("rarity").value;
+    const account = document.getElementById("account").value;
+    if (!rarity || !account) {
+        alert("Completa todos los campos");
+        return;
+    }
     await fetch("/api/add", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ base, name, rarity, account })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({base, name, rarity, account})
     });
-
-    alert("Guardado correctamente!");
-    loadList();
+    updateList();
     document.getElementById("searchResult").innerHTML = "";
 }
 
-// ---------------------------------
-// Listar personajes
-// ---------------------------------
-async function loadList() {
-    const res = await fetch(`/api/list/${base}`);
-    const chars = await res.json();
-    let html = "";
-
-    chars.forEach(c => {
-        html += `
-            <p>
-                <strong>${c.name}</strong> | ${c.rarity} | ${c.account}
-                <button onclick="deleteCharacter('${c.name}')">Borrar</button>
-            </p>
-        `;
-    });
-
-    document.getElementById("list").innerHTML = html;
-}
-
-// ---------------------------------
 // Borrar personaje
-// ---------------------------------
 async function deleteCharacter(name) {
-    if (!confirm(`¿Borrar "${name}"?`)) return;
-
     await fetch("/api/delete", {
         method: "DELETE",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ base, name })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({base, name})
     });
-
-    loadList();
-    document.getElementById("searchResult").innerHTML = "";
+    updateList();
 }
 
-// ---------------------------------
-// Cargar lista al abrir la base
-// ---------------------------------
-if (window.location.pathname.startsWith("/base/")) {
-    loadList();
-}
+// Cargar lista al inicio
+updateList();
