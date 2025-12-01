@@ -1,43 +1,98 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>{{ base_name }}</title>
+    <title>Base {{ base }}</title>
 </head>
 <body>
-    <h1>Base: {{ base_name }}</h1>
-    <a href="{{ url_for('index') }}">Volver al menú</a>
 
-    <h2>Buscar juego</h2>
-    <form method="POST">
-        <input type="text" name="buscar" placeholder="Nombre del juego" required>
-        <button type="submit">Buscar</button>
-    </form>
+<h1>Base: {{ base }}</h1>
 
-    {% if resultado %}
-        <h3>Ya lo tienes:</h3>
-        <p><strong>Nombre:</strong> {{ resultado.nombre }}</p>
-        <p><strong>Rareza:</strong> {{ resultado.rareza }}</p>
-        <p><strong>Cuenta:</strong> {{ resultado.cuenta }}</p>
-    {% endif %}
+<h3>Buscar personaje</h3>
+<input id="searchName" placeholder="Nombre del personaje">
+<button onclick="searchCharacter()">Buscar</button>
 
-    {% if mensaje %}
-        <p style="color:red">{{ mensaje }}</p>
-        <h3>Agregar nuevo juego</h3>
-        <form action="{{ url_for('agregar', base_name=base_name) }}" method="POST">
-            <input type="text" name="nombre" placeholder="Nombre" required>
-            <input type="text" name="rareza" placeholder="Rareza" required>
-            <input type="text" name="cuenta" placeholder="Cuenta" required>
-            <button type="submit">Agregar</button>
-        </form>
-    {% endif %}
+<div id="searchResult"></div>
 
-    <h3>Todos los juegos en {{ base_name }}</h3>
-    <ul>
-        {% for juego in juegos %}
-            <li>{{ juego.nombre }} - {{ juego.rareza }} - {{ juego.cuenta }}</li>
-        {% endfor %}
-    </ul>
+<h3>Personajes guardados</h3>
+<div id="list"></div>
+
+<script>
+const base = "{{ base }}";
+
+async function searchCharacter() {
+    const name = document.getElementById("searchName").value.trim();
+
+    const res = await fetch(`/api/search?base=${base}&name=${name}`);
+    const data = await res.json();
+
+    const box = document.getElementById("searchResult");
+
+    if (!data.exists) {
+        box.innerHTML = `
+            <p>No existe "${name}". ¿Agregar?</p>
+            <input id="newName" value="${name}">
+            <input id="newRarity" placeholder="Rareza">
+            <input id="newAccount" placeholder="Cuenta">
+            <button onclick="addCharacter()">Agregar</button>
+        `;
+    } else {
+        const c = data.data;
+        box.innerHTML = `
+            <h3>Encontrado:</h3>
+            <p>Nombre: ${c.name}</p>
+            <p>Rareza: ${c.rarity}</p>
+            <p>Cuenta: ${c.account}</p>
+            <button onclick="deleteCharacter('${c.name}')">Borrar</button>
+        `;
+    }
+}
+
+async function addCharacter() {
+    const name = document.getElementById("newName").value;
+    const rarity = document.getElementById("newRarity").value;
+    const account = document.getElementById("newAccount").value;
+
+    await fetch("/api/add", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ base, name, rarity, account })
+    });
+
+    alert("Guardado!");
+    loadList();
+}
+
+async function loadList() {
+    const res = await fetch(`/api/list/${base}`);
+    const chars = await res.json();
+    let html = "";
+
+    chars.forEach(c => {
+        html += `
+            <p>
+                Nombre: ${c.name} | ${c.rarity} | ${c.account}
+                <button onclick="deleteCharacter('${c.name}')">Borrar</button>
+            </p>
+        `;
+    });
+
+    document.getElementById("list").innerHTML = html;
+}
+
+async function deleteCharacter(name) {
+    if (!confirm(`¿Borrar "${name}"?`)) return;
+
+    await fetch("/api/delete", {
+        method: "DELETE",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ base, name })
+    });
+
+    loadList();
+}
+
+loadList();
+</script>
 
 </body>
 </html>
