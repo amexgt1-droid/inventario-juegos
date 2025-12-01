@@ -1,14 +1,13 @@
 from flask import Flask, render_template, request, jsonify
 from pymongo import MongoClient
-import os
 
 app = Flask(__name__)
 
 # -------------------------
 # Conexión a MongoDB Atlas
 # -------------------------
-# Pega tu URI en las Environment Variables como MONGO_URI
-MONGO_URI = os.getenv("MONGO_URI")  # Ej: mongodb+srv://usuario:pass@cluster0.mongodb.net/game_db?retryWrites=true&w=majority
+# Ajusta la contraseña si tiene caracteres especiales (%40 para @)
+MONGO_URI = "mongodb+srv://amexgt1:23092025%40a@cluster0.akpblh1.mongodb.net/game_db?retryWrites=true&w=majority"
 client = MongoClient(MONGO_URI)
 
 # Nombre de la base de datos
@@ -69,4 +68,4 @@ def delete_character():
 # Ejecutar la app
 # -------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
